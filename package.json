@@ -9,8 +9,8 @@
 		"nestjs recaptcha"
 	],
 	"private": false,
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/src/index.js",
+	"types": "dist/src/index.d.ts",
 	"scripts": {
 		"prepare": "npm run build",
 		"build": "rimraf dist && tsc && cp index.ts dist && cp package.json dist && cp README.md dist && cp LICENSE dist && cp CONTRIBUTING.md dist && cp CHANGELOG.md dist",
