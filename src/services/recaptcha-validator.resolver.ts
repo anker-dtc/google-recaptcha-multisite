@@ -9,6 +9,7 @@ import { RECAPTCHA_AXIOS_INSTANCE, RECAPTCHA_LOGGER } from '../provider.declarat
 import { AxiosInstance } from 'axios';
 import { Logger } from '@nestjs/common';
 import { EnterpriseReasonTransformer } from './enterprise-reason.transformer';
+import { GOOGLE_RECAPTCHA_SECRET_MAP } from '../index';
 
 @Injectable()
 export class RecaptchaValidatorResolver {
@@ -35,17 +36,30 @@ export class RecaptchaValidatorResolver {
 			this.configRef
 		);
 
-		// 如果提供了 siteKey，从多站点配置中查找对应的 secretKey
-		if (siteKey && this.configRef.valueOf.sites) {
-			const siteConfig = this.configRef.valueOf.sites.find(site => site.siteKey === siteKey);
-			if (!siteConfig) {
-				throw new GoogleRecaptchaException(
-					[ErrorCode.MissingInputSecret],
-					`No secret key found for site key: ${siteKey}`
-				);
+		// 如果提供了 siteKey，按以下优先级查找 secretKey:
+		// 1. 多站点配置 (sites array)
+		// 2. 全局 SECRET_MAP (GOOGLE_RECAPTCHA_SECRET_MAP)
+		if (siteKey) {
+			// 1. 先从 sites 配置中查找
+			if (this.configRef.valueOf.sites) {
+				const siteConfig = this.configRef.valueOf.sites.find(site => site.siteKey === siteKey);
+				if (siteConfig) {
+					validator.setCurrentSecretKey(siteConfig.secretKey);
+					return validator;
+				}
 			}
-			validator.setCurrentSecretKey(siteConfig.secretKey);
-			return validator;
+
+			// 2. 从全局 SECRET_MAP 中查找 (fallback)
+			if (GOOGLE_RECAPTCHA_SECRET_MAP[siteKey]) {
+				validator.setCurrentSecretKey(GOOGLE_RECAPTCHA_SECRET_MAP[siteKey]);
+				return validator;
+			}
+
+			// 如果都找不到，抛出异常
+			throw new GoogleRecaptchaException(
+				[ErrorCode.MissingInputSecret],
+				`No secret key found for site key: ${siteKey}`
+			);
 		}
 
 		// 如果没有提供 siteKey 但有多站点配置，使用第一组配置

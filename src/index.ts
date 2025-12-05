@@ -13,3 +13,10 @@ export { GoogleRecaptchaEnterpriseValidator } from './services/validators/google
 export { RecaptchaVerificationResult } from './models/recaptcha-verification-result';
 export { ClassificationReason } from './enums/classification-reason';
 export { RecaptchaConfigRef } from './models/recaptcha-config-ref';
+
+// Backwards compatibility with @nestlab/google-recaptcha
+import type { RecaptchaVerificationResult } from './models/recaptcha-verification-result';
+export type GoogleRecaptchaValidationResult = RecaptchaVerificationResult;
+
+// Global map for multisite secret keys (siteKey => secretKey)
+export const GOOGLE_RECAPTCHA_SECRET_MAP: Record<string, string> = {};
