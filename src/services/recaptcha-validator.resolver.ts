@@ -45,12 +45,12 @@ export class RecaptchaValidatorResolver {
 			// 1. 先从 sites 配置中查找
 			if (this.configRef.valueOf.sites) {
 				const siteConfig = this.configRef.valueOf.sites.find(site => site.siteKey === siteKey);
-				if (siteConfig) {
+				if (siteConfig && siteConfig.secretKey && siteConfig.secretKey !== 'placeholder') {
 					this.logger.debug(`[reCAPTCHA] Found in sites config: ${siteConfig.name}`);
 					validator.setCurrentSecretKey(siteConfig.secretKey);
 					return validator;
 				}
-				this.logger.debug(`[reCAPTCHA] Not found in sites config, trying SECRET_MAP...`);
+				this.logger.debug(`[reCAPTCHA] Not found in sites config (or is placeholder), trying SECRET_MAP...`);
 			}
 
 			// 2. 从全局 SECRET_MAP 中查找 (fallback)
