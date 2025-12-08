@@ -30,15 +30,15 @@ export class GoogleRecaptchaGuard implements CanActivate {
 	async canActivate(context: ExecutionContext): Promise<true | never> {
 		const request: LiteralObject = this.requestResolver.resolve(context);
 
-		this.logger.log(`[reCAPTCHA Guard] ========== New reCAPTCHA Request ==========`);
-		this.logger.log(`[reCAPTCHA Guard] Request URL: ${request.url || 'N/A'}`);
-		this.logger.log(`[reCAPTCHA Guard] Request Method: ${request.method || 'N/A'}`);
+		console.log(`[reCAPTCHA Guard] ========== New reCAPTCHA Request ==========`);
+		console.log(`[reCAPTCHA Guard] Request URL: ${request.url || 'N/A'}`);
+		console.log(`[reCAPTCHA Guard] Request Method: ${request.method || 'N/A'}`);
 
 		const skipIfValue = this.configRef.valueOf.skipIf;
 		const skip = typeof skipIfValue === 'function' ? await skipIfValue(request) : !!skipIfValue;
 
 		if (skip) {
-			this.logger.log(`[reCAPTCHA Guard] Validation skipped (skipIf=true)`);
+			console.log(`[reCAPTCHA Guard] Validation skipped (skipIf=true)`);
 			return true;
 		}
 
@@ -46,13 +46,13 @@ export class GoogleRecaptchaGuard implements CanActivate {
 
 		// 从请求头或装饰器选项中获取siteKey
 		let siteKey = request.headers['x-recaptcha-sitekey'];
-		this.logger.log(`[reCAPTCHA Guard] Site key from header: ${siteKey ? siteKey.substring(0, 20) + '...' : 'not provided'}`);
+		console.log(`[reCAPTCHA Guard] Site key from header: ${siteKey ? siteKey.substring(0, 20) + '...' : 'not provided'}`);
 
 		if (options.site && this.configRef.valueOf.sites) {
 			const siteConfig = this.configRef.valueOf.sites.find(site => site.name === options.site);
 			if (siteConfig) {
 				siteKey = siteConfig.siteKey;
-				this.logger.log(`[reCAPTCHA Guard] Site key from decorator site '${options.site}': ${siteKey.substring(0, 20)}...`);
+				console.log(`[reCAPTCHA Guard] Site key from decorator site '${options.site}': ${siteKey.substring(0, 20)}...`);
 			}
 		}
 
@@ -61,22 +61,22 @@ export class GoogleRecaptchaGuard implements CanActivate {
 			options?.remoteIp ? await options.remoteIp(request) : await this.configRef.valueOf.remoteIp && this.configRef.valueOf.remoteIp(request),
 		]);
 
-		this.logger.log(`[reCAPTCHA Guard] Token extracted (first 50 chars): ${response ? response.substring(0, 50) + '...' : 'NOT FOUND'}`);
-		this.logger.log(`[reCAPTCHA Guard] Remote IP: ${remoteIp || 'not provided'}`);
+		console.log(`[reCAPTCHA Guard] Token extracted (first 50 chars): ${response ? response.substring(0, 50) + '...' : 'NOT FOUND'}`);
+		console.log(`[reCAPTCHA Guard] Remote IP: ${remoteIp || 'not provided'}`);
 
 		const score = options?.score || this.configRef.valueOf.score;
 		const action = options?.action;
 
-		this.logger.log(`[reCAPTCHA Guard] Resolving validator for site key: ${siteKey ? siteKey.substring(0, 20) + '...' : 'undefined'}`);
+		console.log(`[reCAPTCHA Guard] Resolving validator for site key: ${siteKey ? siteKey.substring(0, 20) + '...' : 'undefined'}`);
 		const validator = this.validatorResolver.resolve(siteKey);
 
-		this.logger.log(`[reCAPTCHA Guard] Calling validator.validate()...`);
+		console.log(`[reCAPTCHA Guard] Calling validator.validate()...`);
 		request.recaptchaValidationResult = await validator.validate({ response, remoteIp, score, action });
 
-		this.logger.log(`[reCAPTCHA Guard] Validation result - Success: ${request.recaptchaValidationResult.success}`);
-		this.logger.log(`[reCAPTCHA Guard] Validation result - Errors: ${JSON.stringify(request.recaptchaValidationResult.errors)}`);
-		this.logger.log(`[reCAPTCHA Guard] Validation result - Score: ${request.recaptchaValidationResult.score}`);
-		this.logger.log(`[reCAPTCHA Guard] Validation result - Action: ${request.recaptchaValidationResult.action}`);
+		console.log(`[reCAPTCHA Guard] Validation result - Success: ${request.recaptchaValidationResult.success}`);
+		console.log(`[reCAPTCHA Guard] Validation result - Errors: ${JSON.stringify(request.recaptchaValidationResult.errors)}`);
+		console.log(`[reCAPTCHA Guard] Validation result - Score: ${request.recaptchaValidationResult.score}`);
+		console.log(`[reCAPTCHA Guard] Validation result - Action: ${request.recaptchaValidationResult.action}`);
 
 		if (this.configRef.valueOf.debug) {
 			const loggerCtx = this.resolveLogContext(validator);
@@ -84,11 +84,11 @@ export class GoogleRecaptchaGuard implements CanActivate {
 		}
 
 		if (request.recaptchaValidationResult.success) {
-			this.logger.log(`[reCAPTCHA Guard] ========== Validation PASSED ==========`);
+			console.log(`[reCAPTCHA Guard] ========== Validation PASSED ==========`);
 			return true;
 		}
 
-		this.logger.error(`[reCAPTCHA Guard] ========== Validation FAILED ==========`);
+		console.error(`[reCAPTCHA Guard] ========== Validation FAILED ==========`);
 		throw new GoogleRecaptchaException(request.recaptchaValidationResult.errors);
 	}
 }
