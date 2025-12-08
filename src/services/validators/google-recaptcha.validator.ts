@@ -38,6 +38,10 @@ export class GoogleRecaptchaValidator extends AbstractGoogleRecaptchaValidator<V
 	 * @param {VerifyResponseOptions} options
 	 */
 	async validate(options: VerifyResponseOptions): Promise<RecaptchaVerificationResult<VerifyResponseV3>> {
+		this.logger.log(`[reCAPTCHA Validator] Starting validation with secret key: ${this.currentSecretKey?.substring(0, 20)}...`);
+		this.logger.log(`[reCAPTCHA Validator] Token (first 50 chars): ${options.response?.substring(0, 50)}...`);
+		this.logger.log(`[reCAPTCHA Validator] Remote IP: ${options.remoteIp || 'not provided'}`);
+
 		const result = await this.verifyResponse<VerifyResponseV3>(options.response, options.remoteIp);
 
 		if (!this.isUseV3(result)) {
@@ -95,6 +99,7 @@ export class GoogleRecaptchaValidator extends AbstractGoogleRecaptchaValidator<V
 		return this.axios.post(url, body, config)
 			.then((res) => res.data)
 			.then((data) => {
+				this.logger.log(`[reCAPTCHA Validator] Google API Response:`, JSON.stringify(data));
 				if (this.options.valueOf.debug) {
 					this.logger.debug(data, `${GoogleRecaptchaContext.GoogleRecaptcha}.response`);
 				}
@@ -110,6 +115,7 @@ export class GoogleRecaptchaValidator extends AbstractGoogleRecaptchaValidator<V
 				return result;
 			})
 			.catch((err: axios.AxiosError) => {
+				this.logger.error(`[reCAPTCHA Validator] Google API Error:`, getErrorInfo(err));
 				if (this.options.valueOf.debug) {
 					this.logger.debug(getErrorInfo(err), `${GoogleRecaptchaContext.GoogleRecaptcha}.error`);
 				}
